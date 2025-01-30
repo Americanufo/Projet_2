@@ -44,3 +44,5 @@ images/
 
 # Ignorer tous les fichiers .zip
 *.zip
+
+.DS_Store
