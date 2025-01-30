@@ -39,7 +39,7 @@ dist/
 *.egg-info/
 
 # Ignorer les dossiers spécifiques
-category/
+categories/
 images/
 
 # Ignorer tous les fichiers .zip
