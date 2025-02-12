@@ -36,6 +36,6 @@ Exécuter la commande suivante :
 python3 main.py
 
 ## Explication des autres scripts Python
-Les scripts Python suivants m'ont été utiles pour développer mon code par étape tel que défini dans les étapes du projet
-analyse_page_livre.py
-analyse_category_mystery.py 
+Les scripts Python suivants m'ont été utiles pour développer mon code par étape tel que défini dans les étapes du projet :
+- analyse_page_livre.py
+- analyse_category_mystery.py 
