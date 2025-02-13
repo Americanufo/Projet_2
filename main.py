@@ -8,6 +8,11 @@ from urllib.parse import urljoin
 # Extraction de la page HTML avec requests
 response = requests.get("https://books.toscrape.com/")
 
+# Vérification du nombres de livres extrait, des urls en erreur et des images manquantes
+extracted_books = 0
+error_urls = []
+failed_images = []
+
 # Extraction des informations souhaitées avec Beautiful Soup
 soup = BeautifulSoup(response.content, "html.parser")
 
@@ -75,7 +80,7 @@ for category, category_id in category_id.items():
         for url in product_page_urls:
             response = requests.get(url)
             soup = BeautifulSoup(response.content, "html.parser")
-            
+            extracted_books += 1
             try:
                 # Extraction de l'url de la page du livre avec requests
                 book_url = response.url
@@ -117,8 +122,7 @@ for category, category_id in category_id.items():
                 print(f"Description : {product_description}")
                 
                 # Extraction de la catégorie du livre   
-                breadcrumb_links = soup.find_all('a')
-                category = breadcrumb_links[3].text if len(breadcrumb_links) > 3 else "Unknown"
+                category = soup.find("ul", class_="breadcrumb").find_all("li")[2].text.strip()
                 print(f"Categorie : {category}")
 
                 # Extraction de la note du livre
@@ -137,12 +141,16 @@ for category, category_id in category_id.items():
                 print(f"URL de l'image : {image_url}")
 
                 # Extraire l'image de chaque livre au format .jpg en nommant le fichier avec le titre du livre et sa catégorie dans le dossier "images"
-                image_filename = f"images/{category}_{title}.jpg"
-                image_data = requests.get(image_url).content
-                with open(image_filename, "wb") as image_file:
-                    image_file.write(image_data)
+                safe_title = re.sub(r'[<>:"/\\|?*]', '_', title) # Nettoyage du titre pour éviter les caractères interdits dans les noms de fichiers
+                image_filename = f"images/{category}_{safe_title}.jpg"
+                try:
+                    image_data = requests.get(image_url).content
+                    with open(image_filename, "wb") as image_file:
+                        image_file.write(image_data)
                     print(f"Image enregistrée : {image_filename}")
-
+                except Exception as e:
+                    failed_images.append((title, category))  # Ajout de l'erreur d'extraction
+                    print(f"Erreur d'extraction pour l'image de {title} - {category}")
 
                 # Écrire les données dans le fichier CSV
                 writer.writerow({
@@ -161,6 +169,19 @@ for category, category_id in category_id.items():
                 print(f"Livre extrait : {title}")
 
             except Exception as e:
-                print(f"Erreur lors de l'extraction d'un livre : {e}")
+                print(f"Erreur lors de l'extraction du livre : {url}")
+                print(f"Type d'erreur: {type(e).__name__}, Message: {e}")
+                error_urls.append(url)
+                extracted_books -= 1
 
+# Vérification de l'extraction des images
+if failed_images:
+    print("Erreur : certaines images n'ont pas été extraites.")
+    for book, category in failed_images:
+        print(f"Image manquante pour le livre : {book} dans la catégorie {category}")
+else:
+    print("Toutes les images ont été extraites avec succès.")
+
+print(f"Nombre de livres extraits : {extracted_books}")
+print(f"Urls en erreur : {error_urls}")
 print("Extraction terminée.")
